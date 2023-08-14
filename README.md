@@ -3,4 +3,3 @@ Local hash generator(.exe) built with .NET framework, supporting MD5, SHA1, SHA2
 
 ## Who do I talk to <a name = "author"></a>
 - Jeffrey Wang (jeffrey.wanggg@gmail.com)
-
