@@ -1,0 +1,1 @@
+# Nomura_Hash-Generator
