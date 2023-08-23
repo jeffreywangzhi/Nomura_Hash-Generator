@@ -36,7 +36,7 @@ namespace fileEncrypter
             Console.WriteLine("inputPath: " + value)
             // set case
             if(s == "U")
-            //tbc
+            // tbc
 
 
         }
