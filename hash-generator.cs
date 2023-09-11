@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
+using System.Configuration;
 
 namespace fileEncrypter
 {
@@ -12,33 +10,71 @@ namespace fileEncrypter
     {
         static void Main(string[] args)
         {
-            // get configurations
-            // target csv file
-            string value1
-                = System.Configuration.ConfigurationManager.AppSettings["inputPath"] == null ?
-                    null : System.Configuration.ConfigurationManager.AppSettings["inputPath"].ToString();
-            // hash mode (0:MD5, 1:SHA-1, 2:SHA256, 3:SHA512)
-            string value2
-                = System.Configuration.ConfigurationManager.AppSettings["hashMode"] == null ?
-                    null : System.Configuration.ConfigurationManager.AppSettings["hashMode"].ToString();
-            // case (U:uppercase, L:lowercase)
-            string s
-                = System.Configuration.ConfigurationManager.AppSettings["case"] == null ?
-                    null : System.Configuration.ConfigurationManager.AppSettings["case"].ToString();
-            string value3 = "";
-            string value4
-                = System.Configuration.ConfigurationManager.AppSettings["outputPath"] == null ?
-                    null : System.Configuration.ConfigurationManager.AppSettings["outputPath"].ToString();       
+            // Read configurations from app.config (assuming it's configured correctly)
+            string inputPath = ConfigurationManager.AppSettings["inputPath"];
+            string hashMode = ConfigurationManager.AppSettings["hashMode"];
+            string outputDirectory = ConfigurationManager.AppSettings["outputDirectory"];
 
-            // get csv file
-            string[] files = Directory.GetFiles(value1, "file*.csv");
-            string value = files[0];
-            Console.WriteLine("inputPath: " + value)
-            // set case
-            if(s == "U")
-            // tbc
+            // Validate inputPath
+            if (string.IsNullOrEmpty(inputPath) || !File.Exists(inputPath))
+            {
+                Console.WriteLine("Invalid inputPath. Make sure it points to an existing file.");
+                return;
+            }
 
+            // Validate outputDirectory and create it if it doesn't exist
+            if (string.IsNullOrEmpty(outputDirectory) || !Directory.Exists(outputDirectory))
+            {
+                Console.WriteLine("Invalid outputDirectory. Creating the directory...");
+                Directory.CreateDirectory(outputDirectory);
+            }
 
+            // Calculate the hash
+            string hash = CalculateHash(inputPath, hashMode);
+
+            // Display the hash
+            Console.WriteLine($"Hash ({hashMode}): {hash}");
+
+            // Example: Save the hash to a text file in the output directory
+            string outputPath = Path.Combine(outputDirectory, "hash.txt");
+            File.WriteAllText(outputPath, hash);
+            Console.WriteLine($"Hash saved to: {outputPath}");
+        }
+
+        static string CalculateHash(string filePath, string hashMode)
+        {
+            using (FileStream stream = File.OpenRead(filePath))
+            {
+                HashAlgorithm hashAlgorithm;
+
+                switch (hashMode.ToLower())
+                {
+                    case "md5":
+                        hashAlgorithm = MD5.Create();
+                        break;
+                    case "sha1":
+                        hashAlgorithm = SHA1.Create();
+                        break;
+                    case "sha256":
+                        hashAlgorithm = SHA256.Create();
+                        break;
+                    case "sha512":
+                        hashAlgorithm = SHA512.Create();
+                        break;
+                    default:
+                        throw new ArgumentException("Invalid hashMode specified.");
+                }
+
+                byte[] hashBytes = hashAlgorithm.ComputeHash(stream);
+
+                StringBuilder sb = new StringBuilder();
+                foreach (byte b in hashBytes)
+                {
+                    sb.Append(b.ToString("x2")); // Format each byte as a two-digit hexadecimal number
+                }
+
+                return sb.ToString();
+            }
         }
     }
 }
